@@ -4,6 +4,20 @@ document.addEventListener("DOMContentLoaded", () => {
   const signupForm = document.getElementById("signup-form");
   const messageDiv = document.getElementById("message");
 
+  // Example data structure for activities with participants
+  const activities = [
+    {
+      title: "Yoga Class",
+      description: "A relaxing yoga session.",
+      participants: ["Alice", "Bob", "Charlie"],
+    },
+    {
+      title: "Cooking Workshop",
+      description: "Learn to cook delicious meals.",
+      participants: ["Dave", "Eve"],
+    },
+  ];
+
   // Function to fetch activities from API
   async function fetchActivities() {
     try {
@@ -25,6 +39,12 @@ document.addEventListener("DOMContentLoaded", () => {
           <p>${details.description}</p>
           <p><strong>Schedule:</strong> ${details.schedule}</p>
           <p><strong>Availability:</strong> ${spotsLeft} spots left</p>
+          <div class="participants">
+            <h5>Participants:</h5>
+            <ul>
+              ${details.participants.map((participant) => `<li>${participant}</li>`).join("")}
+            </ul>
+          </div>
         `;
 
         activitiesList.appendChild(activityCard);
@@ -81,6 +101,31 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // Function to render activity cards
+  function renderActivities() {
+    const main = document.querySelector("main");
+    main.innerHTML = ""; // Clear existing content
+
+    activities.forEach((activity) => {
+      const card = document.createElement("section");
+      card.classList.add("activity-card");
+
+      card.innerHTML = `
+        <h4>${activity.title}</h4>
+        <p>${activity.description}</p>
+        <div class="participants">
+          <h5>Participants:</h5>
+          <ul>
+            ${activity.participants.map((participant) => `<li>${participant}</li>`).join("")}
+          </ul>
+        </div>
+      `;
+
+      main.appendChild(card);
+    });
+  }
+
   // Initialize app
   fetchActivities();
+  renderActivities();
 });
