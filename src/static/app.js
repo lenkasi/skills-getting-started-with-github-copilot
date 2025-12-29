@@ -22,39 +22,13 @@ document.addEventListener("DOMContentLoaded", () => {
   async function fetchActivities() {
     try {
       const response = await fetch("/activities");
-      const activities = await response.json();
+      const updatedActivities = await response.json();
 
-      // Clear loading message
-      activitiesList.innerHTML = "";
+      // Update activities array
+      activities.length = 0;
+      updatedActivities.forEach((activity) => activities.push(activity));
 
-      // Populate activities list
-      Object.entries(activities).forEach(([name, details]) => {
-        const activityCard = document.createElement("div");
-        activityCard.className = "activity-card";
-
-        const spotsLeft = details.max_participants - details.participants.length;
-
-        activityCard.innerHTML = `
-          <h4>${name}</h4>
-          <p>${details.description}</p>
-          <p><strong>Schedule:</strong> ${details.schedule}</p>
-          <p><strong>Availability:</strong> ${spotsLeft} spots left</p>
-          <div class="participants">
-            <h5>Participants:</h5>
-            <ul>
-              ${details.participants.map((participant) => `<li>${participant}</li>`).join("")}
-            </ul>
-          </div>
-        `;
-
-        activitiesList.appendChild(activityCard);
-
-        // Add option to select dropdown
-        const option = document.createElement("option");
-        option.value = name;
-        option.textContent = name;
-        activitySelect.appendChild(option);
-      });
+      renderActivities(); // Re-render activities
     } catch (error) {
       activitiesList.innerHTML = "<p>Failed to load activities. Please try again later.</p>";
       console.error("Error fetching activities:", error);
@@ -103,25 +77,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Function to render activity cards
   function renderActivities() {
-    const main = document.querySelector("main");
-    main.innerHTML = ""; // Clear existing content
+    activitiesList.innerHTML = ""; // Clear existing content
 
     activities.forEach((activity) => {
-      const card = document.createElement("section");
-      card.classList.add("activity-card");
+      const activityCard = document.createElement("div");
+      activityCard.className = "activity-card";
 
-      card.innerHTML = `
+      const spotsLeft = activity.max_participants - activity.participants.length;
+
+      activityCard.innerHTML = `
         <h4>${activity.title}</h4>
         <p>${activity.description}</p>
+        <p><strong>Availability:</strong> ${spotsLeft} spots left</p>
         <div class="participants">
           <h5>Participants:</h5>
           <ul>
-            ${activity.participants.map((participant) => `<li>${participant}</li>`).join("")}
+            ${activity.participants.map((participant) => `<li>${participant} <span class='delete-icon' onclick='unregisterParticipant("${participant}")'>❌</span></li>`).join("")}
           </ul>
         </div>
       `;
 
-      main.appendChild(card);
+      activitiesList.appendChild(activityCard);
     });
   }
 
