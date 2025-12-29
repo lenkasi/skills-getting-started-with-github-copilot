@@ -8,6 +8,7 @@ for extracurricular activities at Mergington High School.
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
+from pydantic import BaseModel
 import os
 from pathlib import Path
 
@@ -38,18 +39,73 @@ activities = {
         "schedule": "Mondays, Wednesdays, Fridays, 2:00 PM - 3:00 PM",
         "max_participants": 30,
         "participants": ["john@mergington.edu", "olivia@mergington.edu"]
+    },
+    "Basketball Team": {
+        "description": "Competitive basketball training and games",
+        "schedule": "Mondays and Wednesdays, 4:00 PM - 5:30 PM",
+        "max_participants": 15,
+        "participants": ["james@mergington.edu"]
+    },
+    "Tennis Club": {
+        "description": "Tennis practice and tournament participation",
+        "schedule": "Tuesdays and Thursdays, 4:00 PM - 5:00 PM",
+        "max_participants": 10,
+        "participants": ["sarah@mergington.edu", "alex@mergington.edu"]
+    },
+    "Drama Club": {
+        "description": "Acting, theater productions, and performance arts",
+        "schedule": "Wednesdays, 3:30 PM - 5:00 PM",
+        "max_participants": 25,
+        "participants": ["isabella@mergington.edu"]
+    },
+    "Art Studio": {
+        "description": "Painting, drawing, and visual arts",
+        "schedule": "Thursdays, 3:30 PM - 4:30 PM",
+        "max_participants": 18,
+        "participants": ["maya@mergington.edu", "lucas@mergington.edu"]
+    },
+    "Science Club": {
+        "description": "Hands-on experiments and STEM exploration",
+        "schedule": "Mondays, 4:00 PM - 5:00 PM",
+        "max_participants": 16,
+        "participants": ["noah@mergington.edu"]
+    },
+    "Debate Team": {
+        "description": "Competitive debate and public speaking skills",
+        "schedule": "Fridays, 4:00 PM - 5:30 PM",
+        "max_participants": 14,
+        "participants": ["ava@mergington.edu", "ethan@mergington.edu"]
     }
 }
 
+# Define Pydantic model for activity
+class Activity(BaseModel):
+    name: str
+    description: str
+    max_participants: int
+
 
 @app.get("/")
-def root():
-    return RedirectResponse(url="/static/index.html")
+async def read_main():
+    return {"message": "Hello World"}
+
+
+@app.post("/activities", status_code=201)
+async def create_activity(activity: Activity):
+    if activity.name in activities:
+        raise HTTPException(status_code=400, detail="Activity already exists")
+    activities[activity.name] = {
+        "description": activity.description,
+        "schedule": "TBD",
+        "max_participants": activity.max_participants,
+        "participants": []
+    }
+    return activity
 
 
 @app.get("/activities")
-def get_activities():
-    return activities
+async def get_activities():
+    return list(activities.values())
 
 
 @app.post("/activities/{activity_name}/signup")
@@ -62,6 +118,15 @@ def signup_for_activity(activity_name: str, email: str):
     # Get the specific activity
     activity = activities[activity_name]
 
+    # Validate student is not already signed up
+    if email in activity["participants"]:
+        raise HTTPException(status_code=400, detail="Student already signed up for this activity")
+
+    # Validate capacity
+    if len(activity["participants"]) >= activity["max_participants"]:
+        raise HTTPException(status_code=400, detail="Activity is full")
+
     # Add student
     activity["participants"].append(email)
     return {"message": f"Signed up {email} for {activity_name}"}
+
